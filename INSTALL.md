@@ -67,8 +67,8 @@ If you are working from the repository clone, use the provided `Makefile`:
 
 ### Claude Code Marketplace
 ```bash
-/plugin marketplace add xbill9/tpu-skill-claude
-/plugin install tpu-management@tpu-skill-claude
+/plugin marketplace add xbill9/tpu-management-skill
+/plugin install tpu-management@tpu-management-skill
 ```
 
 ### Antigravity Local Plugin
