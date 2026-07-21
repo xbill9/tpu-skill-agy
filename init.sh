@@ -1,5 +1,5 @@
 #!/bin/bash
-# Google Cloud setup for the Gemma 4 DevOps agents (Claude Code & Antigravity):
+# Google Cloud setup for the Gemma 4 DevOps agent (Antigravity):
 # verifies auth, resolves the project ID, installs Python dependencies,
 # enables APIs, and grants IAM roles to the default compute service account.
 # Safe to rerun.

@@ -3,11 +3,11 @@
 # Dynamically discover all subdirectories containing a Makefile
 SUBDIRS := $(patsubst %/,%,$(dir $(wildcard */Makefile)))
 
-SKILL_DIR  := .claude/skills/tpu-management
+SKILL_DIR  := skills/tpu-management
 PLUGIN_DIR := skills/tpu-management
 DIST_DIR   := dist
 
-.PHONY: all clean test lint install deploy help init skill skill-install skill-install-agy skill-package plugin-install $(SUBDIRS)
+.PHONY: all clean test lint install deploy help init skill skill-install skill-package plugin-install $(SUBDIRS)
 
 # Default target displays help information
 all: help
@@ -23,9 +23,7 @@ help:
 	@echo "  make install - Run 'make install' in all subdirectories"
 	@echo "  make deploy  - Run 'make deploy' in all subdirectories"
 	@echo "  make skill         - Refresh tpu-management skill snapshots from server.py / tpu.md"
-	@echo "                       (also syncs the plugin copy in skills/ for the marketplace)"
-	@echo "  make skill-install - Refresh + copy the skill to ~/.claude/skills (Claude)"
-	@echo "  make skill-install-agy - Refresh + copy the skill to ~/.gemini/antigravity-cli/skills (Antigravity)"
+	@echo "  make skill-install - Refresh + copy the skill to ~/.gemini/antigravity-cli/skills (Antigravity)"
 	@echo "  make plugin-install    - Register the local project as an Antigravity plugin (recommended)"
 	@echo "  make skill-package     - Refresh + build dist/tpu-management-skill.zip"
 	@echo "  make init TARGET=/path/to/project [ARGS='--project my-gcp-id']"
@@ -43,18 +41,8 @@ init: skill
 
 skill:
 	python3 refresh_skill.py
-	rm -rf $(PLUGIN_DIR)
-	mkdir -p $(dir $(PLUGIN_DIR))
-	cp -r $(SKILL_DIR) $(PLUGIN_DIR)
-	@echo "Synced plugin copy -> $(PLUGIN_DIR)"
 
 skill-install: skill
-	mkdir -p $(HOME)/.claude/skills
-	rm -rf $(HOME)/.claude/skills/tpu-management
-	cp -r $(SKILL_DIR) $(HOME)/.claude/skills/tpu-management
-	@echo "Installed to $(HOME)/.claude/skills/tpu-management"
-
-skill-install-agy: skill
 	mkdir -p $(HOME)/.gemini/antigravity-cli/skills
 	rm -rf $(HOME)/.gemini/antigravity-cli/skills/tpu-management
 	cp -r $(SKILL_DIR) $(HOME)/.gemini/antigravity-cli/skills/tpu-management
@@ -78,7 +66,7 @@ test: TARGET := test
 test: $(SUBDIRS)
 	python3 -m unittest discover -s tests -v
 
-# Lint the repo-root sources (snapshots in .claude/skills and skills/ are
+# Lint the repo-root sources (snapshots in .gemini/skills and skills/ are
 # generated copies — lint the sources, not the copies).
 lint: TARGET := lint
 lint: $(SUBDIRS)

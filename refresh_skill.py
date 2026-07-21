@@ -17,7 +17,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-SKILL = ROOT / ".claude" / "skills" / "tpu-management"
+SKILL = ROOT / "skills" / "tpu-management"
 
 IMAGE_DEF = re.compile(r"^\[image\d+\]: <data:image/[^;]+;base64,")
 

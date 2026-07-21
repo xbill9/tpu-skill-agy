@@ -5,13 +5,12 @@
 #   ./project-setup.sh [TARGET_DIR] [options]
 #
 #   TARGET_DIR              Project to set up (default: current directory).
-#                           Installs the skill into TARGET_DIR/.claude/skills/tpu-management
+#                           Installs the skill into TARGET_DIR/.gemini/skills/tpu-management
 #                           and registers the MCP server in TARGET_DIR/.mcp.json.
 #
 # Options:
-#   --global                Install the skill to user directories (~/.claude/skills and
-#                           ~/.gemini/antigravity-cli/skills) and register the MCP
-#                           server at user scope (all projects).
+#   --global                Install the skill to user directories (~/.gemini/antigravity-cli/skills)
+#                           and register the MCP server at user scope (all projects).
 #   --project ID            GOOGLE_CLOUD_PROJECT for the agent (default: gcloud config,
 #                           else the server.py built-in default).
 #   --model NAME            MODEL_NAME            (default: google/gemma-4-31B-it)
@@ -25,7 +24,7 @@
 # existing .mcp.json entry in place, leaving other servers untouched.
 #
 # Works from either checkout layout:
-#   - the skill repo root (uses .claude/skills/tpu-management), or
+#   - the skill repo root (uses .gemini/skills/tpu-management), or
 #   - inside an unzipped skill bundle (mcp/project-setup.sh next to mcp/server.py).
 
 # --- Prevent killing the shell if sourced ---
@@ -41,8 +40,8 @@ info() { echo "==> $*"; }
 
 # --- Locate the skill source relative to this script ---------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [ -f "$SCRIPT_DIR/.claude/skills/tpu-management/SKILL.md" ]; then
-  SKILL_SRC="$SCRIPT_DIR/.claude/skills/tpu-management"     # repo root (.claude)
+if [ -f "$SCRIPT_DIR/.gemini/skills/tpu-management/SKILL.md" ]; then
+  SKILL_SRC="$SCRIPT_DIR/.gemini/skills/tpu-management"     # repo root (.gemini)
 elif [ -f "$SCRIPT_DIR/skills/tpu-management/SKILL.md" ]; then
   SKILL_SRC="$SCRIPT_DIR/skills/tpu-management"            # repo root (skills/)
 elif [ -f "$SCRIPT_DIR/../SKILL.md" ]; then
@@ -108,21 +107,11 @@ install_skill() {
 }
 
 if [ "$GLOBAL" -eq 1 ]; then
-  SKILL_DEST_CLAUDE="$HOME/.claude/skills/tpu-management"
-  SKILL_DEST_AGY="$HOME/.gemini/antigravity-cli/skills/tpu-management"
-  
-  install_skill "$SKILL_SRC" "$SKILL_DEST_CLAUDE" "Claude"
-  install_skill "$SKILL_SRC" "$SKILL_DEST_AGY" "Antigravity"
-  
-  SKILL_DEST="$SKILL_DEST_CLAUDE" # Use for dependency check hints
+  SKILL_DEST="$HOME/.gemini/antigravity-cli/skills/tpu-management"
+  install_skill "$SKILL_SRC" "$SKILL_DEST" "Antigravity"
 else
-  SKILL_DEST_CLAUDE="$TARGET_DIR/.claude/skills/tpu-management"
-  SKILL_DEST_AGY="$TARGET_DIR/.gemini/antigravity-cli/skills/tpu-management"
-
-  install_skill "$SKILL_SRC" "$SKILL_DEST_CLAUDE" "Claude"
-  install_skill "$SKILL_SRC" "$SKILL_DEST_AGY" "Antigravity"
-
-  SKILL_DEST="$SKILL_DEST_CLAUDE"
+  SKILL_DEST="$TARGET_DIR/.gemini/antigravity-cli/skills/tpu-management"
+  install_skill "$SKILL_SRC" "$SKILL_DEST" "Antigravity"
 fi
 
 # --- Python dependencies -------------------------------------------------------------
@@ -158,25 +147,8 @@ EOF
 
 ENV_JSON="$(build_env_json)"
 
-if [ "$GLOBAL" -eq 1 ]; then
-  if command -v claude >/dev/null 2>&1; then
-    SERVER_JSON="$("$PYTHON_BIN" -c 'import json,sys; print(json.dumps({
-        "command": sys.argv[1],
-        "args": [sys.argv[2]],
-        "env": json.loads(sys.argv[3])}))' \
-        "$PYTHON_BIN" "$SKILL_DEST/mcp/server.py" "$ENV_JSON")"
-    claude mcp remove --scope user "$SERVER_NAME" >/dev/null 2>&1 || true
-    claude mcp add-json --scope user "$SERVER_NAME" "$SERVER_JSON"
-    info "MCP server '$SERVER_NAME' registered at user scope for Claude"
-  else
-    info "Skipping global MCP registration for Claude (claude CLI not found)"
-  fi
-  
-  # Note: Antigravity usually picks up MCP servers from project-level .mcp.json
-  # or global config. Manual registration for Antigravity may be required
-  # if not using project-level config.
-else
-  # Both Claude and Antigravity typically support .mcp.json in the project root.
+if [ "$GLOBAL" -eq 0 ]; then
+  # Register in the project-level .mcp.json file.
   MCP_JSON="$TARGET_DIR/.mcp.json"
   "$PYTHON_BIN" - "$MCP_JSON" "$SERVER_NAME" "$PYTHON_BIN" "$ENV_JSON" <<'EOF'
 import json, sys
@@ -188,7 +160,7 @@ except FileNotFoundError:
     config = {}
 config.setdefault("mcpServers", {})[name] = {
     "command": python_bin,
-    "args": [".claude/skills/tpu-management/mcp/server.py"],
+    "args": [".gemini/skills/tpu-management/mcp/server.py"],
     "env": json.loads(env_json),
 }
 with open(path, "w") as f:
@@ -261,7 +233,7 @@ echo "  TENSOR_PARALLEL_SIZE: $TENSOR_PARALLEL_SIZE"
 echo
 echo "Next steps:"
 if [ "$GLOBAL" -eq 1 ]; then
-  echo "  1. Restart your agent (Claude or Antigravity); the skill should be listed."
+  echo "  1. Restart your agent (Antigravity); the skill should be listed."
 else
   echo "  1. Restart your agent in $TARGET_DIR; approve the project MCP server"
   echo "     when prompted."

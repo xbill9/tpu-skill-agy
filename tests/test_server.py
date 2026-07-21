@@ -142,7 +142,7 @@ class HelperTests(unittest.TestCase):
 class StartupTemplateTests(unittest.TestCase):
     def render(self):
         template = (
-            ROOT / ".claude/skills/tpu-management/mcp/startup_script_template.sh"
+            ROOT / "skills/tpu-management/mcp/startup_script_template.sh"
         ).read_text()
         return template.format(
             project_id="test-project",
@@ -179,24 +179,13 @@ class RepoHygieneTests(unittest.TestCase):
         """Sources at the repo root are authoritative; `make skill` regenerates the
         copies. A mismatch means someone edited one side without resyncing."""
         for src, snap in (
-            ("server.py", ".claude/skills/tpu-management/mcp/server.py"),
-            ("project-setup.sh", ".claude/skills/tpu-management/mcp/project-setup.sh"),
-            ("requirements.txt", ".claude/skills/tpu-management/mcp/requirements.txt"),
+            ("server.py", "skills/tpu-management/mcp/server.py"),
+            ("project-setup.sh", "skills/tpu-management/mcp/project-setup.sh"),
+            ("requirements.txt", "skills/tpu-management/mcp/requirements.txt"),
         ):
             self.assertTrue(
                 filecmp.cmp(ROOT / src, ROOT / snap, shallow=False),
                 f"{snap} is stale — run `make skill`",
-            )
-
-    def test_plugin_copy_matches_skill(self):
-        for rel in ("mcp/server.py", "SKILL.md", "mcp/startup_script_template.sh"):
-            self.assertTrue(
-                filecmp.cmp(
-                    ROOT / ".claude/skills/tpu-management" / rel,
-                    ROOT / "skills/tpu-management" / rel,
-                    shallow=False,
-                ),
-                f"skills/tpu-management/{rel} is stale — run `make skill`",
             )
 
 

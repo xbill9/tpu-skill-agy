@@ -1,6 +1,6 @@
-# 🛠 Installation Guide — tpu-skill
+# 🛠 Installation Guide — tpu-skill (Antigravity)
 
-This guide covers setting up the **`tpu-management`** skill and the **`tpu-devops`** MCP server for both **Claude Code** and **Google Antigravity**.
+This guide covers setting up the **`tpu-management`** skill and the **`tpu-devops`** MCP server for **Google Antigravity**.
 
 ---
 
@@ -16,6 +16,8 @@ Before installing, ensure your environment is configured:
     *   Authenticate:
         ```bash
         gcloud auth login
+        ```
+        ```bash
         gcloud auth application-default login
         ```
 2.  **Python 3:**
@@ -37,7 +39,7 @@ Before installing, ensure your environment is configured:
 The `project-setup.sh` script is idempotent and handles both skill installation and MCP registration.
 
 ### For a Specific Project
-Installs the skill to `./.claude/skills` (and `.gemini/skills`) and registers the server in `.mcp.json`.
+Installs the skill to `./.gemini/skills` and registers the server in `.mcp.json`.
 ```bash
 ./project-setup.sh . --project <your-gcp-project-id>
 ```
@@ -56,8 +58,7 @@ If you are working from the repository clone, use the provided `Makefile`:
 
 | Target | Description |
 | :--- | :--- |
-| `make skill-install` | Installs to **Claude Code** user directory (`~/.claude/skills`) |
-| `make skill-install-agy` | Installs to **Antigravity** user directory (`~/.gemini/antigravity-cli/skills`) |
+| `make skill-install` | Installs to **Antigravity** user directory (`~/.gemini/antigravity-cli/skills`) |
 | `make plugin-install` | Registers the project as an **Antigravity** plugin (`agy plugin install .`) |
 | `make init ARGS='--global'` | Installs globally and registers the MCP server |
 
@@ -65,13 +66,6 @@ If you are working from the repository clone, use the provided `Makefile`:
 
 ## 🧩 Method 3: Plugin Installation
 
-### Claude Code Marketplace
-```bash
-/plugin marketplace add xbill9/tpu-management-skill
-/plugin install tpu-management@tpu-management-skill
-```
-
-### Antigravity Local Plugin
 If you have cloned the repository, you can install it as a local plugin:
 ```bash
 make plugin-install
@@ -83,17 +77,8 @@ agy plugin install .
 
 ## ⚙️ Manual Configuration
 
-If you prefer manual setup, you can register the MCP server directly.
+If you prefer manual setup, you can register the MCP server directly. Add the server to your project's `.mcp.json`:
 
-### Claude Code
-```bash
-claude mcp add tpu-devops \
-  --env GOOGLE_CLOUD_PROJECT=<project-id> \
-  -- python /path/to/server.py
-```
-
-### Antigravity / Gemini CLI
-Add the server to your project's `.mcp.json`:
 ```json
 {
   "mcpServers": {
@@ -112,9 +97,9 @@ Add the server to your project's `.mcp.json`:
 
 ## ✅ Verification
 
-1.  **Restart your agent** (Claude Code or Antigravity).
-2.  **Verify Skill:** Run `/skills` (Claude) or check the skill list in Antigravity.
-3.  **Verify MCP:** Run `/mcp` (Claude) or list resources in Antigravity to see the `tpu-devops` tools.
+1.  **Restart your agent** (Antigravity).
+2.  **Verify Skill:** Check the skill list in Antigravity.
+3.  **Verify MCP:** List resources in Antigravity to see the `tpu-devops` tools.
 4.  **Check Status:** Run the `get_system_status` tool to verify the GCP connection.
 
 ---
