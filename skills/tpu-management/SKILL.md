@@ -146,13 +146,23 @@ Upstream references: [vLLM TPU docs](https://docs.vllm.ai/projects/tpu/en/latest
 ([releases](https://github.com/vllm-project/tpu-inference/releases) track newly
 landed quantization/model support).
 
-Known-broken (verified on `vllm-tpu:nightly`, Jul 2026): the Gemma 4 **E2B QAT**
-checkpoints do not load on TPU in any form — `-qat-w4a16-ct` fails with
-"compressed-tensors scheme for layer 'per_layer_model_projection' is not yet
-supported in the JAX path", and `-qat-q4_0-unquantized` fails on both the JAX and
-`MODEL_IMPL_TYPE=vllm` (torchax) paths with "weights not initialized from
-checkpoint: layers.15-34 self_attn.k_norm.weight" (the export omits k_norm for
-the upper KV-sharing layers). Serve the plain `google/gemma-4-E2B-it` instead.
+Known-broken (verified on `vllm-tpu:nightly`, Jul 2026): the Gemma 4 **E2B and E4B QAT**
+checkpoints do not load on JAX/TPU in any form:
+- **Quantized (`-qat-w4a16-ct`):** fails with `compressed-tensors scheme for layer 'per_layer_model_projection' is not yet supported in the JAX path`.
+- **Unquantized (`-qat-q4_0-unquantized`):** fails during weight loading check with `ValueError: Following weights were not initialized from checkpoint: {layers.XX.self_attn.k_norm.weight}`. This occurs because the model loader demands normalization parameters for KV-shared layers that the QAT checkpoint legitimately omits.
+
+**Workaround:** Serve the plain unquantized base models (e.g. `google/gemma-4-E2B-it` or `google/gemma-4-E4B-it`) instead. The JAX engine automatically saves memory by running the KV cache in FP8 (`fp8_e5m2`).
+
+## Model Sizing & Context Length Constraints
+
+- **Gemma 4 2B / 4B on `v6e-1` (32 GB HBM):**
+  - Weights occupy ~5.75 GB to 8.00 GB. Supports full **65,536 context length** (`--max-model-len 65536`) with ample FP8 KV Cache room.
+- **Gemma 4 12B on `v6e-1` (32 GB HBM):**
+  - Weights occupy ~24 GB, leaving only ~3.56 GB for KV Cache.
+  - **Must cap context:** Set `--max-model-len 8192` for single-chip serving. Attempting `--max-model-len 65536` or `12288` will trigger a KV cache memory `ValueError` OOM on startup.
+  - **Full Context Workaround:** For 65,536 context length on 12B, deploy on a 4-chip pod slice (`v6e-4`, 128 GB total HBM) with `--tensor-parallel-size 4`.
+
+
 
 ## Field notes — GCE flex-start path (`gcloud compute instances create`)
 

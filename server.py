@@ -1168,10 +1168,24 @@ async def manage_vllm_docker(
         p is not None for p in (model_name, load_format, max_model_len, gpu_memory_utilization)
     )
     # Auto-detect defaults based on model name
-    is_large = "26B" in selected_model or "31B" in selected_model
+    is_large = any(k in selected_model for k in ["26B", "26b", "27B", "27b", "31B", "31b"])
+
     resolved_load_format = load_format or ("tpu_streaming_loader" if is_large else "runai_streamer")
     resolved_max_model_len = int(max_model_len or (16384 if is_large else 65536))
     resolved_gpu_memory_utilization = float(gpu_memory_utilization or (0.80 if is_large else 0.90))
+
+    if tensor_parallel_size:
+        resolved_tp_size = int(tensor_parallel_size)
+    elif instance_name:
+        if "v6e4" in instance_name or "v6e-4" in instance_name or "-4t" in instance_name:
+            resolved_tp_size = 4
+        elif "v6e8" in instance_name or "v6e-8" in instance_name or "-8t" in instance_name:
+            resolved_tp_size = 8
+        else:
+            resolved_tp_size = 1
+    else:
+        resolved_tp_size = TENSOR_PARALLEL_SIZE
+
 
     # Use the nightly image for latest fixes. String args are shell-quoted because
     # this whole command line is executed remotely via `ssh --command`.
@@ -1182,11 +1196,12 @@ async def manage_vllm_docker(
         f"-e HF_HOME=/dev/shm "
         f"-e HF_HUB_DISABLE_XET=1 "
         f"-e HF_HUB_ENABLE_HF_TRANSFER=0 "
+        f"-e VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 "
         f"-e XLA_PYTHON_CLIENT_MEM_FRACTION={resolved_gpu_memory_utilization} "
         f"-e XLA_PYTHON_CLIENT_PREALLOCATE=false "
         f"-e HF_TOKEN=$(gcloud secrets versions access latest --secret=hf-token) "
         f"{docker_image} vllm serve {shlex.quote(selected_model)} "
-        f"--tensor-parallel-size {TENSOR_PARALLEL_SIZE} --disable_chunked_mm_input --max-model-len {resolved_max_model_len} "
+        f"--tensor-parallel-size {resolved_tp_size} --disable_chunked_mm_input --max-model-len {resolved_max_model_len} "
         f"--gpu-memory-utilization {resolved_gpu_memory_utilization} "
         f"--max_num_batched_tokens 4096 --enable-auto-tool-choice --tool-call-parser gemma4 --reasoning-parser gemma4 "
         f"--load-format {shlex.quote(resolved_load_format)} "

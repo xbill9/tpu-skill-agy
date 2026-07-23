@@ -36,10 +36,14 @@ main() {
     if [ -s "$PROJECT_FILE" ]; then
         PROJECT_ID=$(tr -d '[:space:]' < "$PROJECT_FILE")
         echo "Found saved project ID in $PROJECT_FILE: $PROJECT_ID"
-        if ! gcloud projects describe "$PROJECT_ID" --quiet >/dev/null 2>&1; then
-            echo "Warning: project '$PROJECT_ID' does not exist or you lack access to it." >&2
-            rm "$PROJECT_FILE"
-            PROJECT_ID=""
+        if ! gcloud projects describe "$PROJECT_ID" --quiet >/dev/null; then
+            echo "Warning: project '$PROJECT_ID' could not be verified." >&2
+            local CONFIRM=""
+            read -r -p "Do you want to use the saved project '$PROJECT_ID' anyway? [y/N]: " CONFIRM
+            if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
+                rm "$PROJECT_FILE"
+                PROJECT_ID=""
+            fi
         fi
     fi
     while [ -z "$PROJECT_ID" ]; do
@@ -47,9 +51,13 @@ main() {
             echo "Error: no project ID provided and none saved in $PROJECT_FILE." >&2
             return 1
         fi
-        if ! gcloud projects describe "$PROJECT_ID" --quiet >/dev/null 2>&1; then
-            echo "Project '$PROJECT_ID' does not exist or you lack access to it. Try again." >&2
-            PROJECT_ID=""
+        if ! gcloud projects describe "$PROJECT_ID" --quiet >/dev/null; then
+            echo "Warning: project '$PROJECT_ID' could not be verified (it may not exist, or you may lack resourcemanager.projects.get permission)." >&2
+            local CONFIRM=""
+            read -r -p "Do you want to proceed with '$PROJECT_ID' anyway? [y/N]: " CONFIRM
+            if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
+                PROJECT_ID=""
+            fi
         fi
     done
     echo "$PROJECT_ID" > "$PROJECT_FILE"

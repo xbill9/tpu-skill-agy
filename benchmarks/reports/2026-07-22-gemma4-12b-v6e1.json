@@ -1,0 +1,118 @@
+{
+  "$schema": "../serving-report.schema.json",
+  "schema_version": "1.0",
+  "run": {
+    "id": "2026-07-22-gemma4-12b-v6e1",
+    "date": "2026-07-22",
+    "operator": "Antigravity Agentic Assistant",
+    "source": "benchmarks/reports/2026-07-22-gemma4-12b-v6e1.json",
+    "notes": "First serving benchmark of google/gemma-4-12B-it on single-chip v6e-1. Model weights (bfloat16, ~24 GB) loaded successfully into HBM, but max_model_len had to be reduced from default 65536 to 8192 due to remaining KV cache memory limits (3.56 GB)."
+  },
+  "hardware": {
+    "accelerator": "tpu-v6e",
+    "chips": 1,
+    "topology": "1t",
+    "hbm_gb_per_chip": 32,
+    "machine_type": "ct6e-standard-1t",
+    "host": {
+      "cloud": "gcp",
+      "zone": "europe-west4-a",
+      "provisioning": "flex-start",
+      "instance_name": "vllm-gemma4-12b-vm",
+      "max_run_duration_hours": 4
+    },
+    "pricing": {
+      "currency": "USD",
+      "rate_per_chip_hour": 1.35,
+      "source": "https://cloud.google.com/tpu/pricing"
+    }
+  },
+  "model": {
+    "id": "google/gemma-4-12B-it",
+    "family": "gemma-4",
+    "parameters_b": 12,
+    "weights_dtype": "bfloat16",
+    "quantization": "none",
+    "kv_cache_dtype": "fp8_e5m2",
+    "max_model_len": 8192,
+    "architecture_notes": "Gemma 4 12B model. Fits in 32GB HBM with 8192 context length, leaving ~3.56GB for FP8 KV Cache."
+  },
+  "software": {
+    "engine": "vllm",
+    "version": "0.23.1rc1.dev1362+g05781e21d",
+    "container_image": "vllm/vllm-tpu:nightly",
+    "backend": "tpu-inference (JAX)",
+    "tensor_parallel_size": 1,
+    "serve_args": [
+      "--max-model-len 8192",
+      "--tensor-parallel-size 1",
+      "--disable_chunked_mm_input",
+      "--max_num_batched_tokens 4096",
+      "--enable-auto-tool-choice",
+      "--tool-call-parser gemma4",
+      "--reasoning-parser gemma4"
+    ]
+  },
+  "load_matrix": [
+    {
+      "model_id": "google/gemma-4-12B-it",
+      "backend": "tpu-inference (JAX)",
+      "verdict": "loads"
+    }
+  ],
+  "throughput": {
+    "workload": {
+      "tool": "vllm bench serve",
+      "dataset": "random",
+      "input_len": 1024,
+      "output_len": 128,
+      "num_prompts": 50
+    },
+    "sweep": [
+      {
+        "concurrency": 50,
+        "request_rate_rps": 2.06,
+        "output_tok_per_s": 263.38,
+        "total_tok_per_s": 2370.44,
+        "per_stream_tok_per_s": 40.16,
+        "ttft_ms": {
+          "mean": 9682.68,
+          "median": 10799.60,
+          "p99": 21354.39
+        },
+        "tpot_ms": {
+          "mean": 25.51,
+          "median": 24.90,
+          "p99": 27.31
+        },
+        "itl_ms": {
+          "mean": 25.51,
+          "median": 24.70,
+          "p99": 25.79
+        }
+      }
+    ]
+  },
+  "startup": {
+    "time_to_healthy_s": 500,
+    "engine_init_s": 416.4,
+    "compile_s": 342.29,
+    "notes": "JAX graph compilation took 342.29s for the 12B model."
+  },
+  "cost": {
+    "per_m_output_tokens": [
+      {
+        "operating_point": "c=50",
+        "output_tok_per_s": 263.38,
+        "usd": 1.42
+      }
+    ],
+    "comparisons": [
+      {
+        "name": "Gemini 2.5 Flash Lite (Managed API)",
+        "usd_per_m_output_tokens": 0.40,
+        "source": "https://ai.google.dev/pricing"
+      }
+    ]
+  }
+}

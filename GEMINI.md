@@ -24,6 +24,7 @@ Key entrypoints in the codebase:
 - **Snapshot refresher:** [refresh_skill.py](refresh_skill.py) — regenerates the bundled skill copies from the root sources
 - **Plugin marketplace manifests:** [.claude-plugin/](.claude-plugin/) — makes the repo installable via the Claude Code plugin system
 - **Reference guide:** `.claude/skills/tpu-management/references/tpu-guide.md` — TPU getting started guide: zones, quotas, troubleshooting
+- **Serving Benchmark Reports:** [benchmarks/](benchmarks/) — JSON schema ([serving-report.schema.json](benchmarks/serving-report.schema.json)) and reporting guidelines ([benchmarks/README.md](benchmarks/README.md)) for tracking model deployment latency, throughput, and costs.
 
 ---
 

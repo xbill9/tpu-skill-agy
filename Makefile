@@ -61,6 +61,9 @@ skill-package: skill
 # Target-specific variable assignments
 clean: TARGET := clean
 clean: $(SUBDIRS)
+	rm -rf $(DIST_DIR) .ruff_cache
+	find . -type d -name "__pycache__" -exec rm -rf {} +
+
 
 test: TARGET := test
 test: $(SUBDIRS)

@@ -126,6 +126,7 @@ echo "Executing command: sudo docker run --name vllm-gemma4 --privileged --net=h
   -v /dev/shm:/dev/shm --shm-size 10gb \\
   -e HF_HOME=\"$HF_HOME\" \\
   -e HF_TOKEN=\"***masked***\" \\
+  -e VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 \\
   vllm/vllm-tpu:nightly vllm serve \"$VLLM_MODEL\" \\
   --max-model-len \"$VLLM_MAX_MODEL_LEN\" \\
   --tensor-parallel-size \"$VLLM_TP_SIZE\" \\
@@ -139,6 +140,7 @@ sudo docker run --name vllm-gemma4 --privileged --net=host -d \
   -v /dev/shm:/dev/shm --shm-size 10gb \
   -e HF_HOME="$HF_HOME" \
   -e HF_TOKEN="$HF_TOKEN" \
+  -e VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 \
   vllm/vllm-tpu:nightly vllm serve "$VLLM_MODEL" \
   --max-model-len "$VLLM_MAX_MODEL_LEN" \
   --tensor-parallel-size "$VLLM_TP_SIZE" \

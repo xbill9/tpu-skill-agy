@@ -1,0 +1,239 @@
+{
+  "schema_version": "1.0",
+  "run": {
+    "id": "2026-07-22-gemma4-e4b-v6e1",
+    "date": "2026-07-22",
+    "notes": "Greedy decoding with static shapes on a single TPU v6e chip (v6e-1)."
+  },
+  "hardware": {
+    "accelerator": "tpu-v6e",
+    "chips": 1,
+    "hbm_gb_per_chip": 32,
+    "machine_type": "ct6e-standard-1t",
+    "host": {
+      "cloud": "gcp",
+      "zone": "europe-west4-a",
+      "provisioning": "flex-start",
+      "instance_name": "vllm-gemma4-e4b-vm",
+      "max_run_duration_hours": 4
+    },
+    "pricing": {
+      "currency": "USD",
+      "rate_per_chip_hour": 1.35,
+      "source": "https://cloud.google.com/products/dws/pricing"
+    }
+  },
+  "model": {
+    "id": "google/gemma-4-E4B-it",
+    "family": "gemma-4",
+    "parameters_b": 4.0,
+    "weights_dtype": "bfloat16",
+    "quantization": "none",
+    "kv_cache_dtype": "fp8_e5m2",
+    "max_model_len": 65536,
+    "architecture_notes": "Single TPU v6e chip serving Gemma 4 E4B-it."
+  },
+  "software": {
+    "engine": "vllm",
+    "version": "0.23.1rc1.dev1362+g05781e21d",
+    "container_image": "vllm/vllm-tpu:nightly",
+    "backend": "tpu-inference (JAX)",
+    "tensor_parallel_size": 1,
+    "serve_args": [
+      "--max-model-len 65536",
+      "--tensor-parallel-size 1",
+      "--disable_chunked_mm_input",
+      "--max_num_batched_tokens 4096",
+      "--enable-auto-tool-choice",
+      "--tool-call-parser gemma4",
+      "--reasoning-parser gemma4"
+    ]
+  },
+  "load_matrix": [
+    {
+      "model_id": "google/gemma-4-E4B-it",
+      "backend": "tpu-inference (JAX)",
+      "verdict": "loads"
+    },
+    {
+      "model_id": "google/gemma-4-E4B-it-qat-w4a16-ct",
+      "backend": "tpu-inference (JAX)",
+      "verdict": "fails",
+      "error": "compressed-tensors scheme for layer 'model.language_model.per_layer_model_projection' is not yet supported in the JAX path",
+      "issue": "https://github.com/vllm-project/tpu-inference/issues/3225"
+    },
+    {
+      "model_id": "google/gemma-4-E4B-it-qat-q4_0-unquantized",
+      "backend": "tpu-inference (JAX)",
+      "verdict": "fails",
+      "error": "loader demands self_attn.k_norm.weight for KV-shared layers that the checkpoint legitimately omits",
+      "issue": "https://github.com/vllm-project/tpu-inference/issues/3225"
+    }
+  ],
+  "throughput": {
+    "workload": {
+      "tool": "vllm bench serve",
+      "dataset": "random",
+      "input_len": 1024,
+      "output_len": 128,
+      "num_prompts": 100,
+      "runs_per_point": 1,
+      "noise_floor_pct": 10
+    },
+    "sweep": [
+      {
+        "concurrency": 1,
+        "request_rate_rps": 0.86,
+        "output_tok_per_s": 110.21,
+        "total_tok_per_s": 991.88,
+        "per_stream_tok_per_s": 112.6,
+        "ttft_ms": {
+          "mean": 32.79,
+          "median": 30.38,
+          "p99": 33.58
+        },
+        "tpot_ms": {
+          "mean": 8.89,
+          "median": 8.88,
+          "p99": 8.91
+        },
+        "itl_ms": {
+          "mean": 8.89,
+          "median": 8.93,
+          "p99": 9.49
+        }
+      },
+      {
+        "concurrency": 8,
+        "request_rate_rps": 5.94,
+        "output_tok_per_s": 760.88,
+        "total_tok_per_s": 6847.92,
+        "per_stream_tok_per_s": 101.5,
+        "ttft_ms": {
+          "mean": 47.92,
+          "median": 32.13,
+          "p99": 108.71
+        },
+        "tpot_ms": {
+          "mean": 9.84,
+          "median": 9.85,
+          "p99": 10.24
+        },
+        "itl_ms": {
+          "mean": 9.84,
+          "median": 9.81,
+          "p99": 11.74
+        }
+      },
+      {
+        "concurrency": 32,
+        "request_rate_rps": 9.4,
+        "output_tok_per_s": 1202.75,
+        "total_tok_per_s": 10824.73,
+        "per_stream_tok_per_s": 43.2,
+        "ttft_ms": {
+          "mean": 176.98,
+          "median": 147.01,
+          "p99": 345.51
+        },
+        "tpot_ms": {
+          "mean": 22.75,
+          "median": 23.17,
+          "p99": 24.68
+        },
+        "itl_ms": {
+          "mean": 22.75,
+          "median": 22.73,
+          "p99": 33.42
+        }
+      },
+      {
+        "concurrency": 64,
+        "request_rate_rps": 13.29,
+        "output_tok_per_s": 1701.43,
+        "total_tok_per_s": 15312.88,
+        "per_stream_tok_per_s": 32.3,
+        "ttft_ms": {
+          "mean": 235.94,
+          "median": 174.16,
+          "p99": 436.67
+        },
+        "tpot_ms": {
+          "mean": 28.94,
+          "median": 30.94,
+          "p99": 32.07
+        },
+        "itl_ms": {
+          "mean": 28.94,
+          "median": 29.97,
+          "p99": 61.49
+        }
+      },
+      {
+        "concurrency": 100,
+        "request_rate_rps": 17.89,
+        "output_tok_per_s": 2290.34,
+        "total_tok_per_s": 20613.1,
+        "per_stream_tok_per_s": 24.8,
+        "ttft_ms": {
+          "mean": 392.98,
+          "median": 418.32,
+          "p99": 602.68
+        },
+        "tpot_ms": {
+          "mean": 40.27,
+          "median": 40.28,
+          "p99": 41.39
+        },
+        "itl_ms": {
+          "mean": 40.27,
+          "median": 39.78,
+          "p99": 75.74
+        }
+      }
+    ]
+  },
+  "memory": {
+    "usable_hbm_gib": 31.24,
+    "weights_gib": 8.0,
+    "notes": "HBM profile measured during single rank Flax worker loading."
+  },
+  "startup": {
+    "time_to_healthy_s": 532,
+    "engine_init_s": 442.40,
+    "compile_s": 367.92,
+    "notes": "From instance RUNNING to healthy."
+  },
+  "cost": {
+    "per_m_output_tokens": [
+      {
+        "operating_point": "saturation",
+        "output_tok_per_s": 2290.34,
+        "usd": 0.16
+      },
+      {
+        "operating_point": "c=64",
+        "output_tok_per_s": 1701.43,
+        "usd": 0.22
+      },
+      {
+        "operating_point": "c=8",
+        "output_tok_per_s": 760.88,
+        "usd": 0.49
+      },
+      {
+        "operating_point": "single-stream",
+        "output_tok_per_s": 110.21,
+        "usd": 3.40
+      }
+    ],
+    "comparisons": [
+      {
+        "name": "gemini-2.5-flash-lite",
+        "usd_per_m_output_tokens": 0.40,
+        "source": "https://ai.google.dev/gemini-api/docs/pricing"
+      }
+    ],
+    "notes": "Breakeven vs Flash-Lite occurs around 940 sustained tokens/sec."
+  }
+}

@@ -151,16 +151,17 @@ if [ "$GLOBAL" -eq 0 ]; then
   # Register in the project-level .mcp.json file.
   MCP_JSON="$TARGET_DIR/.mcp.json"
   "$PYTHON_BIN" - "$MCP_JSON" "$SERVER_NAME" "$PYTHON_BIN" "$ENV_JSON" <<'EOF'
-import json, sys
+import json, sys, os
 path, name, python_bin, env_json = sys.argv[1:5]
 try:
     with open(path) as f:
         config = json.load(f)
 except FileNotFoundError:
     config = {}
+server_path = os.path.join(os.path.dirname(os.path.abspath(path)), ".gemini/antigravity-cli/skills/tpu-management/mcp/server.py")
 config.setdefault("mcpServers", {})[name] = {
     "command": python_bin,
-    "args": [".gemini/skills/tpu-management/mcp/server.py"],
+    "args": [server_path],
     "env": json.loads(env_json),
 }
 with open(path, "w") as f:
