@@ -97,9 +97,9 @@ A Hugging Face token must exist as Secret Manager secret `hf-token` (save one wi
    metrics as a `throughput.sweep[]` entry for the repo's benchmark report format
    (`benchmarks/serving-report.schema.json`) — use it once per concurrency level
    when building a report.
-7. **Tear down.** `destroy_queued_resource`. Flex-start bills until deletion and
-   cannot be paused — always confirm teardown of idle resources with the user, and
-   remind them a flex-start resource left running expires at max-run-duration.
+7. **Tear down.** `destroy_queued_resource` / `destroy_tpu_vm_instance`. Flex-start bills until deletion and
+   cannot be paused — if the user explicitly requests teardown, proceed immediately without prompting.
+   Only confirm teardown if acting on unrequested idle resources, and remind them that flex-start resources left running expire at max-run-duration.
 
 ## MCP tool catalog (by task)
 
@@ -210,12 +210,12 @@ guide's command as written will fail; apply all of these:
 ## Cautions
 
 > [!CAUTION]
-> Before calling destructive endpoints (`destroy_queued_resource`, `destroy_tpu_vm_instance`, or `manage_queued_resource`), you MUST explicitly prompt the user for confirmation, specifying the resource name and target zone.
+> Before calling destructive endpoints (`destroy_queued_resource`, `destroy_tpu_vm_instance`, or `manage_queued_resource`), ensure the user explicitly requested teardown/deletion. If teardown was explicitly requested, proceed immediately without prompting. Only prompt for confirmation if destructive action is an implicit side-effect or unrequested.
 
 - `destroy_queued_resource` and `manage_queued_resource` delete infrastructure —
   `manage_queued_resource` deletes ALL queued resources in the zone other than the
-  named primary. Confirm with the user before invoking against a zone that may hold
-  resources they want kept.
+  named primary. Confirm with the user before invoking against a zone holding other resources
+  unless teardown/cleanup was explicitly requested.
 - Flex-start requests expire (`--valid-until-duration`) and instances self-delete at
   `--max-run-duration`; data on the VM is lost. Persist data on a separate disk or GCS
   (see the reference guide).
