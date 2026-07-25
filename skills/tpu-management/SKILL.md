@@ -1,6 +1,6 @@
 ---
 name: tpu-management
-description: Manage Google Cloud TPU capacity and Gemma 4 vLLM serving on TPU VMs. Use when the user asks about provisioning, finding, listing, or destroying TPUs / queued resources / flex-start VMs, starting or debugging vLLM on TPU (v6e, v5p, v5e), TPU quotas and zones, TPU cost estimates, benchmarking TPU serving, or the TPU devops MCP agent. Triggers include "TPU", "queued resource", "flex-start", "v6e", "vLLM on TPU", "TPU quota".
+description: Manage Google Cloud TPU capacity (v6e, v5p, v5e) and Gemma 4 vLLM serving on TPU VMs. Triggers include "TPU", "queued resource", "flex-start", "v6e", "vLLM on TPU", "TPU quota".
 ---
 
 # TPU Management
@@ -41,7 +41,7 @@ mcp/project-setup.sh /path/to/project --project <gcp-project-id>   # one project
 mcp/project-setup.sh --global                                      # all projects (user scope)
 # from the skill repo root: 
 make init TARGET=/path/to/project ARGS='--project <id>'
-make skill-install-agy                                             # global install for Antigravity
+make skill-install                                                 # global install for Antigravity
 make plugin-install                                                # register as local plugin for Antigravity
 ```
 
@@ -208,6 +208,9 @@ guide's command as written will fail; apply all of these:
   install ~1 min → image pull ~5 min → model download/compile ~5-10 min.
 
 ## Cautions
+
+> [!CAUTION]
+> Before calling destructive endpoints (`destroy_queued_resource`, `destroy_tpu_vm_instance`, or `manage_queued_resource`), you MUST explicitly prompt the user for confirmation, specifying the resource name and target zone.
 
 - `destroy_queued_resource` and `manage_queued_resource` delete infrastructure —
   `manage_queued_resource` deletes ALL queued resources in the zone other than the
