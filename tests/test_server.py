@@ -10,6 +10,7 @@ import filecmp
 import subprocess
 import sys
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -111,6 +112,16 @@ class HelperTests(unittest.TestCase):
 
     def test_served_model_id_falls_back_to_none_when_unreachable(self):
         self.assertIsNone(run(server._get_served_model_id("http://127.0.0.1:9")))
+
+    @patch("server.get_secret", new_callable=unittest.mock.AsyncMock, return_value="fake-token")
+    @patch("server._get_formatted_startup_script", return_value="#!/bin/bash\necho ok")
+    @patch("server.run_command", new_callable=unittest.mock.AsyncMock, return_value=(0, "", ""))
+    def test_create_tpu_vm_includes_flex_reservation(self, mock_run, mock_script, mock_secret):
+        result = run(server.create_tpu_vm_instance(accelerator="v6e-1", model_name="google/gemma-4-E2B-it"))
+        self.assertTrue(result.startswith("🚀"), f"Failed: {result}")
+        cmd = mock_run.call_args[0][0]
+        self.assertIn("--flex-reservation", cmd)
+        self.assertIn("--provisioning-model=FLEX_START", cmd)
 
     def test_sweep_point_from_bench_result(self):
         result = {

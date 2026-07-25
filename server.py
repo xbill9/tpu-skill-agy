@@ -634,6 +634,7 @@ async def create_tpu_vm_instance(
     boot_disk_size_gb: int = 200,
     max_run_duration: str = "4h",
     request_valid_for: str = "2h",
+    flex_reservation: Annotated[bool, Field(description="Whether to request a flex reservation (default True)")] = True,
 ) -> str:
     """Creates a flex-start TPU VM as a GCE instance (recommended path for v6e/v5p) and
     auto-starts vLLM via the startup script. Boot disk defaults to 200GB because the
@@ -688,6 +689,8 @@ async def create_tpu_vm_instance(
         "--scopes=cloud-platform",
         f"--metadata-from-file=startup-script={script_file}",
     ]
+    if flex_reservation:
+        create_cmd.append("--flex-reservation")
     logger.info(f"Executing gcloud command: {' '.join(shlex.quote(c) for c in create_cmd)}")
     # Flex-start creation blocks until capacity is granted or the request expires.
     try:
@@ -1102,6 +1105,7 @@ async def find_tpu_vm(
     per_zone_wait: Annotated[
         str, Field(description="How long each zone's flex-start request stays valid, e.g. '5m'")
     ] = "5m",
+    flex_reservation: Annotated[bool, Field(description="Whether to request a flex reservation (default True)")] = True,
 ) -> str:
     """GCE counterpart of `find_tpu`: tries flex-start TPU VM creation across zones
     until one grants capacity. TPUS_PER_TPU_FAMILY quota is only discoverable by
@@ -1122,6 +1126,7 @@ async def find_tpu_vm(
             accelerator=accelerator,
             model_name=model_name,
             request_valid_for=per_zone_wait,
+            flex_reservation=flex_reservation,
         )
         attempts.append(f"- **{zone}**: {result.splitlines()[0]}")
         if result.startswith("🚀"):
