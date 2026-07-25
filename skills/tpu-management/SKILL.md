@@ -127,6 +127,19 @@ latency/throughput), `run_vllm_benchmark`
 
 Every agent in this repo also exposes `get_help` for its live configuration.
 
+### Extended Model Summary Format (`get_model_details`)
+
+When inspecting a deployment using `get_model_details`, the tool queries the serving host and outputs a structured Markdown report containing four extended diagnostic sections:
+
+1. **Model Information (`/v1/models`)**: Raw JSON payload containing active model ID, ownership, and object type.
+2. **vLLM Engine Version (`/version`)**: Installed vLLM engine version string (e.g. `0.8.0.dev`).
+3. **Health Status (`/health`)**: HTTP health endpoint evaluation (`Healthy` ✅ / `Unhealthy` ❌).
+4. **Key Prometheus Metrics (`/metrics`)**: Extended runtime telemetry filtered for core operational metrics:
+   - `vllm_num_requests_running`, `vllm_num_requests_waiting`
+   - `vllm_gpu_cache_usage_perc` / `vllm_tpu_cache_usage_perc`
+   - `vllm_avg_prompt_throughput_tok_per_s`, `vllm_avg_generation_throughput_tok_per_s`
+   - `process_resident_memory_bytes`
+
 ## vLLM on TPU — required flags (Gemma 4)
 
 When composing or reviewing a vLLM serve command for TPU, use:
