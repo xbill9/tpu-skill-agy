@@ -7,7 +7,7 @@ This repository packages the **`tpu-management` skill** and the **`tpu-devops` M
 
 It finds and provisions TPU capacity (flex-start VMs, queued resources), starts and debugs vLLM, verifies model health, runs benchmarks, analyzes logs with the self-hosted Gemma 4 model, and tears everything down safely.
 
-**GitHub:** https://github.com/xbill9/tpu-management-skill
+**GitHub:** https://github.com/xbill9/tpu-skill-agy
 
 ---
 
@@ -49,8 +49,8 @@ Pick the install path that fits:
 **Option A — clone and install** (all projects on this machine):
 
 ```bash
-git clone https://github.com/xbill9/tpu-management-skill
-cd tpu-management-skill
+git clone https://github.com/xbill9/tpu-skill-agy
+cd tpu-skill-agy
 make skill-install                                   # skill only
 ./project-setup.sh --global                          # skill + user-scope tpu-devops MCP server
 ```
@@ -59,7 +59,7 @@ make skill-install                                   # skill only
 
 ```bash
 curl -L -o /tmp/tpu-management-skill.zip \
-  https://github.com/xbill9/tpu-management-skill/raw/main/dist/tpu-management-skill.zip
+  https://github.com/xbill9/tpu-skill-agy/raw/main/dist/tpu-management-skill.zip
 mkdir -p ~/.gemini/antigravity-cli/skills && unzip -o /tmp/tpu-management-skill.zip -d ~/.gemini/antigravity-cli/skills/
 ~/.gemini/antigravity-cli/skills/tpu-management/mcp/project-setup.sh --global   # optional: register the MCP server
 ```
