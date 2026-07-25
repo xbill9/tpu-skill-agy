@@ -90,10 +90,10 @@ async def run_command(cmd: list[str], timeout: int = 60) -> tuple[int, str, str]
     except asyncio.TimeoutError:
         try:
             process.kill()
-        except ProcessLookupError:
-            pass
-        stdout, stderr = await process.communicate()
-        return -1, stdout.decode().strip(), f"Timeout after {timeout}s"
+            stdout, stderr = await process.communicate()
+            return -1, stdout.decode().strip(), f"Timeout after {timeout}s"
+        except Exception:
+            return -1, "", f"Timeout after {timeout}s"
     except Exception as e:
         return -1, "", str(e)
 
@@ -639,6 +639,12 @@ async def create_tpu_vm_instance(
     auto-starts vLLM via the startup script. Boot disk defaults to 200GB because the
     image default (10GB) cannot hold the vLLM TPU image."""
     zone = _zone(zone)
+    duration_pattern = re.compile(r"^\d+[smhd]$")
+    if not duration_pattern.match(max_run_duration):
+        return f"❌ Invalid max_run_duration '{max_run_duration}'. Must be a valid duration string like '4h', '30m', or '3600s'."
+    if not duration_pattern.match(request_valid_for):
+        return f"❌ Invalid request_valid_for '{request_valid_for}'. Must be a valid duration string like '2h', '15m', or '1800s'."
+
     if accelerator not in _GCE_MACHINE_TYPES:
         supported = ", ".join(sorted(_GCE_MACHINE_TYPES))
         return f"❌ Unsupported accelerator '{accelerator}'. Supported: {supported}"
