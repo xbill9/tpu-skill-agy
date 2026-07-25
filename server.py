@@ -1160,6 +1160,9 @@ async def manage_vllm_docker(
     gpu_memory_utilization: Annotated[
         Optional[float], Field(gt=0, le=1, description="Memory utilization fraction; auto-picked from model size")
     ] = None,
+    tensor_parallel_size: Annotated[
+        Optional[int], Field(ge=1, description="Tensor parallel size (TP size); auto-picked from instance name or defaults")
+    ] = None,
 ) -> str:
     """Manages the vLLM Docker container on the serving host. Targets the queued
     resource's node by default, or a GCE flex-start TPU VM when instance_name is given.
