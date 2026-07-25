@@ -33,8 +33,8 @@ Key entrypoints in the codebase:
 The repo-root files (`server.py`, `project-setup.sh`, `tpu.md`) are authoritative; the skill directories and zip are generated snapshots. After editing a source:
 
 ```bash
-make skill                  # Regenerate skill snapshots + plugin copy
-make skill-install-agy      # ...and install to Antigravity skills directory
+make skill                  # Regenerate skill snapshots
+make skill-install          # ...and install to Antigravity skills directory (~/.gemini/antigravity-cli/skills)
 make plugin-install         # ...and register as an Antigravity plugin (recommended)
 make skill-package          # ...and rebuild dist/tpu-management-skill.zip
 ```
