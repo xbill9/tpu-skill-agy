@@ -39,10 +39,7 @@ DESTRUCTIVE = ToolAnnotations(destructiveHint=True)
 
 
 def _resolve_project_id() -> str:
-    """GOOGLE_CLOUD_PROJECT env var, falling back to the active gcloud config."""
-    project = os.getenv("GOOGLE_CLOUD_PROJECT", "")
-    if project:
-        return project
+    """Active gcloud config project, falling back to GOOGLE_CLOUD_PROJECT env var."""
     try:
         result = subprocess.run(
             ["gcloud", "config", "get-value", "project"],
@@ -51,9 +48,11 @@ def _resolve_project_id() -> str:
             timeout=10,
         )
         project = result.stdout.strip()
+        if project and project != "(unset)":
+            return project
     except Exception:
-        project = ""
-    return "" if project == "(unset)" else project
+        pass
+    return os.getenv("GOOGLE_CLOUD_PROJECT", "")
 
 
 PROJECT_ID = _resolve_project_id()
@@ -191,9 +190,16 @@ async def _get_node_ip(node_id: str) -> Optional[str]:
 
 async def get_secret(secret_id: str = HF_SECRET_ID) -> Optional[str]:
     """Retrieves a secret from Secret Manager."""
-    client = secretmanager.SecretManagerServiceClient()
-    name = f"projects/{PROJECT_ID}/secrets/{secret_id}/versions/latest"
     try:
+        cmd = ["gcloud", "secrets", "versions", "access", "latest", f"--secret={secret_id}", f"--project={PROJECT_ID}"]
+        rc, stdout, _ = await run_command(cmd)
+        if rc == 0 and stdout:
+            return stdout.strip()
+    except Exception:
+        pass
+    try:
+        client = secretmanager.SecretManagerServiceClient()
+        name = f"projects/{PROJECT_ID}/secrets/{secret_id}/versions/latest"
         response = await asyncio.to_thread(client.access_secret_version, request={"name": name})
         return response.payload.data.decode("UTF-8")
     except Exception:
@@ -689,8 +695,6 @@ async def create_tpu_vm_instance(
         "--scopes=cloud-platform",
         f"--metadata-from-file=startup-script={script_file}",
     ]
-    if flex_reservation:
-        create_cmd.append("--flex-reservation")
     logger.info(f"Executing gcloud command: {' '.join(shlex.quote(c) for c in create_cmd)}")
     # Flex-start creation blocks until capacity is granted or the request expires.
     try:

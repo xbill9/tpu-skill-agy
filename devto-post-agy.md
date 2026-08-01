@@ -1,7 +1,8 @@
 title: "Self-Hosted Gemma 4 on TPU v6e: Deployment & SRE with Antigravity"
-published: false
+published: true
 tags: tpu, llm, vllm, antigravity, googlecloud
 description: "From quota-sweeping to self-hosted SRE diagnostics: how the Antigravity TPU skill automates Gemma 4 serving on flex-start v6e chips."
+cover_image: devto-cover.jpg
 ---
 
 *Measured 2026-07-21 on `vllm/vllm-tpu:nightly` (vLLM 0.23.1rc1.dev1076), a GCE flex-start `ct6e-standard-1t` (one TPU v6e chip, 32 GB HBM) in europe-west4-a, managed by the **Antigravity TPU DevOps agent**.*
