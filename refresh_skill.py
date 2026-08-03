@@ -52,7 +52,8 @@ def main() -> int:
     print(f"copied project-setup.sh -> {(SKILL / 'mcp' / 'project-setup.sh').relative_to(ROOT)}")
     shutil.copyfile(ROOT / "requirements.txt", SKILL / "mcp" / "requirements.txt")
     print(f"copied requirements.txt -> {(SKILL / 'mcp' / 'requirements.txt').relative_to(ROOT)}")
-    build_guide(ROOT / "tpu.md", SKILL / "references" / "tpu-guide.md")
+    if (ROOT / "tpu.md").exists():
+        build_guide(ROOT / "tpu.md", SKILL / "references" / "tpu-guide.md")
     return 0
 
 

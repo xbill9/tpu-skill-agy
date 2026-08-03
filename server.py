@@ -695,6 +695,8 @@ async def create_tpu_vm_instance(
         "--scopes=cloud-platform",
         f"--metadata-from-file=startup-script={script_file}",
     ]
+    if flex_reservation:
+        create_cmd.append("--flex-reservation")
     logger.info(f"Executing gcloud command: {' '.join(shlex.quote(c) for c in create_cmd)}")
     # Flex-start creation blocks until capacity is granted or the request expires.
     try:
